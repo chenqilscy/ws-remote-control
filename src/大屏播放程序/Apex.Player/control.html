@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+
+<body>
+
+    <fieldset>
+        <legend>图片</legend>
+        <div>
+            <input type="button" value="获取播放列表" onclick="getPicList()" />
+            <input type="button" value="获取参数" onclick="getPicConfig()" />
+            <input type="button" value="播放" onclick="picPlay()" />
+            <input type="button" value="停止" onclick="picStop()" />
+            <input type="button" value="上一张" onclick="picPre()" />
+            <input type="button" value="下一张" onclick="picNext()" />
+        </div>
+        <div>
+            <input type="text" name="" id="picInterval">
+            <input type="text" name="" id="picExt">
+            <input type="button" value="设置参数" onclick="setPicConfig()" />
+        </div>
+    </fieldset>
+
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
+    <script>
+        var ws;
+        var wsState = 0;
+
+        function startWs() {
+            ws = new WebSocket("ws://127.0.0.1:50000");
+            ws.onopen = function (evt) {
+                console.log("Connection opened ");
+                wsState = 1;
+            };
+            ws.onmessage = function (evt) {
+                processReceive(evt);
+            };
+            ws.onclose = function (evt) {
+                console.log("Connection closed.");
+                wsState = 0;
+            };
+        }
+
+        // var timer = setInterval(function () {
+        //     if (ws == null || wsState === 0) startWs();
+        // }, 1000);
+        startWs();
+
+        function wsSend(jsonObj) {
+            if (wsState === 0) {
+                console.error("ws is not open");
+                return;
+            }
+
+            var str = JSON.stringify(jsonObj);
+            ws.send(str);
+            console.log("ws send", str);
+        }
+
+        function processReceive(evt) {
+            var data = JSON.parse(evt.data);
+            console.log("Received Message: " + data);
+            if (data.status === 0) {
+                if (data.data) {
+                    var resData = data.data;
+                    var pfunction = resData.function;
+                    if (pfunction === 11) {
+                        $("#picInterval").val(resData.data.interval);
+                        $("#picExt").val(resData.data.ext);
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        function getPicList() {
+            var data = {
+                function: 10
+            };
+            wsSend(data);
+        }
+
+        function getPicConfig() {
+            var data = {
+                function: 11
+            };
+            wsSend(data);
+        }
+
+        function setPicConfig() {
+            var data = {
+                function: 12,
+                data: {
+                    interval: $("#picInterval").val(),
+                    ext: $("#picExt").val()
+                }
+            };
+            wsSend(data);
+        }
+
+        function picPlay() {
+            var data = {
+                function: 13
+            };
+            wsSend(data);
+        }
+
+        function picStop() {
+            var data = {
+                function: 14
+            };
+            wsSend(data);
+        }
+
+        function picPre() {
+            var data = {
+                function: 15
+            };
+            wsSend(data);
+        }
+
+        function picNext() {
+            var data = {
+                function: 16
+            };
+            wsSend(data);
+        }
+    </script>
+</body>
+
+</html>
